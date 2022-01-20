@@ -1,2 +1,2 @@
-# rust-XArray
-Linux's eXtensible Array (XArray) in rust.
+# rust-xarray
+Linux's eXtensible Array (XArray), an array abstraction of radix-tree, in rust.
