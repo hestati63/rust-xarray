@@ -444,8 +444,8 @@ where
 
     fn move_index(&mut self, offset: u8) {
         let shift = self.node.get().unwrap().shift;
-        self.index &= !((CHUNK_MASK as u64) << shift);
-        self.index += (offset as u64) << shift;
+        self.index &= (!(CHUNK_MASK as u64)) << shift;
+        self.index = self.index.overflowing_add((offset as u64) << shift).0;
     }
 
     pub fn find(&mut self, xa: &XArray<T>, end: u64) -> Option<RawEntry<T>> {

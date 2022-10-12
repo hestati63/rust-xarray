@@ -37,7 +37,7 @@ where
     fn drop(&mut self) {
         for (_, v) in self.inner.iter() {
             unsafe {
-                Box::from_raw(v as *const _ as *mut T);
+                let _ = Box::from_raw(v as *const _ as *mut T);
             }
         }
     }

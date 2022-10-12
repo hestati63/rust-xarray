@@ -13,5 +13,5 @@ mod state;
 pub mod xarray;
 pub mod xarray_boxed;
 
-pub use xarray::{XArray, XaMark};
-pub use xarray_boxed::XArrayBoxed;
+pub use crate::xarray::{XArray, XaMark};
+pub use crate::xarray_boxed::XArrayBoxed;

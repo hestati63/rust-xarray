@@ -304,3 +304,31 @@ fn test_mark3() {
     assert!(marked.is_empty());
     assert!(!array.is_marked(XaMark::Mark0));
 }
+
+#[test]
+fn test_next_allocated() {
+    use std::vec::Vec;
+
+    let indice = (0..u64::MAX)
+        .step_by(u64::MAX as usize / TCNT)
+        .take(TCNT)
+        .collect::<Vec<_>>();
+    {
+        let mut array: XArray<u64> = XArray::new();
+        assert_eq!(array.is_empty(), true);
+
+        for (idx, i) in indice.iter().enumerate() {
+            assert_eq!(array.insert(*i, &indice[idx]), None);
+            assert!(array.insert(*i, &indice[idx]).is_some());
+            println!("{}", i);
+        }
+
+        let mut cursor = array.cursor(indice[0]);
+
+        for i in indice.iter() {
+            assert_eq!(cursor.key(), *i);
+            assert_eq!(cursor.current(), Some(i));
+            cursor.next_allocated();
+        }
+    }
+}

@@ -231,6 +231,7 @@ impl<'a, 'b, T> Cursor<'a, 'b, T> {
     ///
     /// If the underlying value is exist, return [`Some`].
     /// Otherwise, return [`None`].
+    #[inline]
     pub fn current(&mut self) -> Option<&'a T> {
         // https://elixir.bootlin.com/linux/latest/source/lib/xarray.c#L1298
         let Self { xa, xas } = self;
@@ -241,6 +242,13 @@ impl<'a, 'b, T> Cursor<'a, 'b, T> {
     #[inline]
     pub fn key(&mut self) -> u64 {
         self.xas.index
+    }
+
+    /// Move the cursor to next allocated value.
+    #[inline]
+    pub fn next_allocated(&mut self) {
+        let Self { xas, xa } = self;
+        xas.get_next(xa, u64::MAX);
     }
 }
 
@@ -255,6 +263,7 @@ impl<'a, 'b, T> CursorMut<'a, 'b, T> {
     ///
     /// If the underlying value is exist, return [`Some`].
     /// Otherwise, return [`None`].
+    #[inline]
     pub fn current(&mut self) -> Option<&'b T> {
         // https://elixir.bootlin.com/linux/latest/source/lib/xarray.c#L1298
         let Self { xa, xas } = self;
@@ -262,6 +271,7 @@ impl<'a, 'b, T> CursorMut<'a, 'b, T> {
     }
 
     /// Set marks on the element that the cursor is currently pointing to.
+    #[inline]
     pub fn mark(&mut self, marks: XaMark) {
         let Self { xa, xas } = self;
         if xas.load(xa).is_value() {
@@ -270,6 +280,7 @@ impl<'a, 'b, T> CursorMut<'a, 'b, T> {
     }
 
     /// Remove marks on the element that the cursor is currently pointing to.
+    #[inline]
     pub fn unmark(&mut self, marks: XaMark) {
         let Self { xa, xas } = self;
         if xas.load(xa).is_value() {
@@ -277,6 +288,7 @@ impl<'a, 'b, T> CursorMut<'a, 'b, T> {
         }
     }
 
+    #[inline]
     pub fn next(&mut self) {
         let Self { ref mut xas, .. } = self;
         match xas.node.get() {
@@ -288,6 +300,7 @@ impl<'a, 'b, T> CursorMut<'a, 'b, T> {
         }
     }
 
+    #[inline]
     pub fn current_or_insert<F>(&mut self, f: F) -> (bool, &'a T)
     where
         T: 'a,
@@ -309,6 +322,7 @@ impl<'a, 'b, T> CursorMut<'a, 'b, T> {
     /// If the xarray does not contains the value at the index,
     /// [`None`] is returned.
     /// value is the reference of T, which outlives than self.
+    #[inline]
     pub fn insert(&mut self, value: &'a T) -> Option<&'a T> {
         let Self { xa, xas } = self;
 
@@ -325,6 +339,7 @@ impl<'a, 'b, T> CursorMut<'a, 'b, T> {
     /// If the xarray does not contains the value at the index,
     /// [`None`] is returned.
     /// value is the reference of T, which outlives than self.
+    #[inline]
     pub fn remove(&mut self) -> Option<&'a T> {
         let Self { xa, xas } = self;
 
@@ -341,6 +356,13 @@ impl<'a, 'b, T> CursorMut<'a, 'b, T> {
     pub fn key(&mut self) -> u64 {
         self.xas.index
     }
+
+    /// Move the cursor to next allocated value.
+    #[inline]
+    pub fn next_allocated(&mut self) {
+        let Self { xas, xa } = self;
+        xas.get_next(xa, u64::MAX);
+    }
 }
 
 pub struct Range<'a, 'b, T> {
@@ -350,6 +372,7 @@ pub struct Range<'a, 'b, T> {
 }
 
 impl<'a, 'b, T> Range<'a, 'b, T> {
+    #[inline]
     pub fn filter_mark(mut self, mark: XaMark) -> Self {
         if self.mark.is_some() {
             panic!("Multiple mark cannot be filtered at once");
@@ -358,6 +381,7 @@ impl<'a, 'b, T> Range<'a, 'b, T> {
         self
     }
 
+    #[inline]
     pub fn as_cursor(&self) -> &Cursor<'a, 'b, T> {
         &self.cursor
     }
@@ -393,6 +417,7 @@ pub struct RangeMut<'a, 'b, T> {
 }
 
 impl<'a, 'b, T> RangeMut<'a, 'b, T> {
+    #[inline]
     pub fn filter_mark(mut self, mark: XaMark) -> Self {
         if self.mark.is_some() {
             panic!("Multiple mark cannot be filtered at once");
@@ -401,6 +426,7 @@ impl<'a, 'b, T> RangeMut<'a, 'b, T> {
         self
     }
 
+    #[inline]
     pub fn as_cursor_mut(&mut self) -> &mut CursorMut<'a, 'b, T> {
         &mut self.cursor
     }
