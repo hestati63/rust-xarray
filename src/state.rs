@@ -1,5 +1,5 @@
 use crate::node::*;
-use crate::XArray;
+use crate::RawXArray;
 use crate::XaMark;
 use alloc::boxed::Box;
 
@@ -65,7 +65,7 @@ where
         }
     }
 
-    pub fn load(&mut self, xa: &XArray<T>) -> RawEntry<T> {
+    pub fn load(&mut self, xa: &RawXArray<T>) -> RawEntry<T> {
         let mut entry = self
             .node
             .get()
@@ -99,7 +99,7 @@ where
         entry
     }
 
-    pub fn set_mark(&mut self, xa: &mut XArray<T>, mark: XaMark) {
+    pub fn set_mark(&mut self, xa: &mut RawXArray<T>, mark: XaMark) {
         let mut node = self.node.get();
         let mut offset = self.offset;
         while let Some(n) = node {
@@ -110,7 +110,7 @@ where
         xa.marks |= 1 << mark as usize;
     }
 
-    pub fn unset_mark(&mut self, xa: &mut XArray<T>, mark: XaMark) {
+    pub fn unset_mark(&mut self, xa: &mut RawXArray<T>, mark: XaMark) {
         let mut node = self.node.get();
         let mut offset = self.offset;
         while let Some(n) = node {
@@ -124,7 +124,7 @@ where
         xa.marks &= !(1 << mark as usize);
     }
 
-    pub fn store(&mut self, xa: &mut XArray<T>, mut entry: RawEntry<T>) -> RawEntry<T> {
+    pub fn store(&mut self, xa: &mut RawXArray<T>, mut entry: RawEntry<T>) -> RawEntry<T> {
         // https://elixir.bootlin.com/linux/latest/source/lib/xarray.c#L769
         let mut count = 0;
         let mut values = 0;
@@ -201,7 +201,7 @@ where
         first
     }
 
-    fn create(&mut self, xa: &mut XArray<T>, allow_root: bool) -> RawEntry<T> {
+    fn create(&mut self, xa: &mut RawXArray<T>, allow_root: bool) -> RawEntry<T> {
         // https://elixir.bootlin.com/linux/latest/source/lib/xarray.c#L635
         let order = self.shift;
         let (mut slot, mut entry, mut shift) = if let Some(node) = self.node.get() {
@@ -259,7 +259,7 @@ where
         (self.sibs as u64 + 1) << self.shift as u64
     }
 
-    fn expand(&mut self, xa: &mut XArray<T>, mut head: RawEntry<T>) -> Option<u8> {
+    fn expand(&mut self, xa: &mut RawXArray<T>, mut head: RawEntry<T>) -> Option<u8> {
         let max = self.max();
         let mut shift = 0;
         let mut node = None;
@@ -325,7 +325,7 @@ where
 
     fn update_node(
         &mut self,
-        xa: &mut XArray<T>,
+        xa: &mut RawXArray<T>,
         node: Option<&mut Node<T>>,
         count: i32,
         values: i32,
@@ -342,7 +342,7 @@ where
         }
     }
 
-    fn delete_node(&mut self, xa: &mut XArray<T>) {
+    fn delete_node(&mut self, xa: &mut RawXArray<T>) {
         let mut node = self.node.get().unwrap();
         while node.count == 0 {
             let boxed_node = unsafe { Box::from_raw(node) };
@@ -364,7 +364,7 @@ where
         }
     }
 
-    fn shrink(&mut self, xa: &mut XArray<T>) {
+    fn shrink(&mut self, xa: &mut RawXArray<T>) {
         let mut node = self.node.get().unwrap();
         while node.count == 1 {
             let raw_entry = *node.entry(0);
@@ -448,7 +448,7 @@ where
         self.index = self.index.overflowing_add((offset as u64) << shift).0;
     }
 
-    pub fn find(&mut self, xa: &XArray<T>, end: u64) -> Option<RawEntry<T>> {
+    pub fn find(&mut self, xa: &RawXArray<T>, end: u64) -> Option<RawEntry<T>> {
         if self.node.is_bound() {
             return None;
         }
@@ -509,7 +509,12 @@ where
         None
     }
 
-    pub fn find_marked(&mut self, xa: &XArray<T>, end: u64, mark: XaMark) -> Option<RawEntry<T>> {
+    pub fn find_marked(
+        &mut self,
+        xa: &RawXArray<T>,
+        end: u64,
+        mark: XaMark,
+    ) -> Option<RawEntry<T>> {
         if self.index > end {
             self.node = NodeOrState::Restart;
             return None;
@@ -598,7 +603,7 @@ where
         None
     }
 
-    pub fn get_next(&mut self, xa: &XArray<T>, end: u64) -> Option<RawEntry<T>> {
+    pub fn get_next(&mut self, xa: &RawXArray<T>, end: u64) -> Option<RawEntry<T>> {
         match self.node.get() {
             _ if self.offset != (self.index as usize & CHUNK_MASK) as u8 => self.find(xa, end),
             None => self.find(xa, end),
@@ -624,7 +629,7 @@ where
 
     pub fn get_next_marked(
         &mut self,
-        xa: &XArray<T>,
+        xa: &RawXArray<T>,
         mark: XaMark,
         end: u64,
     ) -> Option<RawEntry<T>> {

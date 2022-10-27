@@ -18,7 +18,7 @@ where
 fn test_simple_insert() {
     let p1 = 1;
     let p2 = 2;
-    let mut array: XArray<u64> = XArray::new();
+    let mut array: RawXArray<u64> = RawXArray::new();
     assert!(array.insert(1, &p1).is_none());
     assert!(array.insert(2, &p2).is_none());
     assert_eq!(array.get(1), Some(&p1));
@@ -28,7 +28,7 @@ fn test_simple_insert() {
 #[test]
 fn test_simple_remove() {
     let p1 = 1;
-    let mut array: XArray<u64> = XArray::new();
+    let mut array: RawXArray<u64> = RawXArray::new();
     for i in 0..100000 {
         assert!(array.insert(i, &p1).is_none());
     }
@@ -41,7 +41,7 @@ fn test_simple_remove() {
 #[test]
 fn test_simple_mark() {
     let p = 1;
-    let mut array: XArray<u64> = XArray::new();
+    let mut array: RawXArray<u64> = RawXArray::new();
     let mut cursor = array.cursor_mut(0);
     assert_eq!(cursor.insert(&p), None);
     cursor.mark(XaMark::Mark0);
@@ -78,7 +78,7 @@ fn test_range() {
         .step_by(u64::MAX as usize / TCNT)
         .collect::<Vec<_>>();
     {
-        let mut array: XArray<u64> = XArray::new();
+        let mut array: RawXArray<u64> = RawXArray::new();
         let mut inserted = Vec::new();
         assert_eq!(array.is_empty(), true);
 
@@ -105,7 +105,7 @@ fn test_sparse_insert() {
         .step_by(u64::MAX as usize / TCNT)
         .collect::<Vec<_>>();
     {
-        let mut array: XArray<u64> = XArray::new();
+        let mut array: RawXArray<u64> = RawXArray::new();
         let mut inserted = Vec::new();
         assert_eq!(array.is_empty(), true);
         for (idx, i) in indice.iter().enumerate().take(TCNT) {
@@ -132,7 +132,7 @@ fn test_dense_insert() {
     let indice = (0..TCNT as u64).collect::<Vec<_>>();
 
     {
-        let mut array: XArray<u64> = XArray::new();
+        let mut array: RawXArray<u64> = RawXArray::new();
         assert_eq!(array.is_empty(), true);
 
         let mut inserted = Vec::new();
@@ -169,7 +169,7 @@ fn test_random_insert() {
         arv[i as usize] = rng.gen::<u64>();
     }
     {
-        let mut array: XArray<u64> = XArray::new();
+        let mut array: RawXArray<u64> = RawXArray::new();
 
         assert_eq!(array.is_empty(), true);
 
@@ -214,7 +214,7 @@ fn test_mark() {
     let indice = (0..u64::MAX)
         .step_by(u64::MAX as usize / TCNT)
         .collect::<Vec<_>>();
-    let mut array: XArray<u64> = XArray::new();
+    let mut array: RawXArray<u64> = RawXArray::new();
     let mut inserted = Vec::new();
     let mut marked = std::collections::BTreeSet::new();
     {
@@ -245,7 +245,7 @@ fn test_mark2() {
     let indice = (0..u64::MAX)
         .step_by(u64::MAX as usize / TCNT)
         .collect::<Vec<_>>();
-    let mut array: XArray<u64> = XArray::new();
+    let mut array: RawXArray<u64> = RawXArray::new();
     let mut inserted = Vec::new();
     let mut marked = std::collections::BTreeSet::new();
     {
@@ -288,7 +288,7 @@ fn test_mark3() {
             let idx = idx as u64;
             let mut cursor = array.cursor_mut(idx);
 
-            assert_eq!(cursor.insert(*i), None);
+            assert_eq!(cursor.insert(Box::new(*i)), None);
             if idx & 1 == 0 {
                 cursor.mark(XaMark::Mark0);
                 marked.insert(idx);
@@ -314,7 +314,7 @@ fn test_next_allocated() {
         .take(TCNT)
         .collect::<Vec<_>>();
     {
-        let mut array: XArray<u64> = XArray::new();
+        let mut array: RawXArray<u64> = RawXArray::new();
         assert_eq!(array.is_empty(), true);
 
         for (idx, i) in indice.iter().enumerate() {
