@@ -314,7 +314,7 @@ where
     fn alloc<'a, 'b>(&'a mut self, shift: u8) -> Option<&'b mut Node<T>> {
         Node::new(shift, &mut self.node)
             .map(|b| Box::leak(Box::new(b)))
-            .map(|mut node| {
+            .map(|node| {
                 if let Some(p) = self.node.get() {
                     node.offset = self.offset;
                     p.count += 1;
@@ -475,8 +475,7 @@ where
 
         self.offset += 1;
         self.move_index(self.offset);
-
-        while self.node.get().is_some() && self.index < end {
+        while self.node.get().is_some() && self.index <= end {
             let node = self.node.get().unwrap();
             if self.offset == CHUNK_SIZE as u8 {
                 self.offset = node.offset + 1;
@@ -506,6 +505,7 @@ where
         if self.node.is_empty() {
             self.node = NodeOrState::Bound;
         }
+
         None
     }
 
